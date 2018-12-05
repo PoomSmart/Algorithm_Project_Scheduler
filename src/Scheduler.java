@@ -234,7 +234,7 @@ public class Scheduler {
 	public void report() {
 		Debugger.println("Total time " + total_time, true);
 		Debugger.println(String.format("Total profit %d / %d (%.2f%%)", profit, ideal_profit, 100 * ((double)profit / ideal_profit)), true);
-		Debugger.println("Total jobs done " + jobs_done, true);
+		Debugger.println(String.format("Total jobs done %d / %d (%.2f%%)", jobs_done, n_jobs, 100 * ((double)jobs_done / n_jobs)), true);
 	}
 
 	public static void main(String[] args) {
