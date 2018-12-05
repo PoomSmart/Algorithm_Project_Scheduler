@@ -12,6 +12,12 @@ public class Scheduler {
 	public static final int lower = 4;
 	public static final int upper = 20;
 
+	public static enum JobSortingType {
+		DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
+	};
+
+	public static final JobSortingType jobSortingType = JobSortingType.PriceOverTimeToDeadline;
+
 	public ArrayList<Job> jobs;
 	public ArrayList<Employee> es;
 
@@ -60,12 +66,11 @@ public class Scheduler {
 			Employee e = new Employee(i + 1);
 			for (int j = 1; j <= n_job_types; ++j) {
 				if (Randomizer.rand(0, 4) > 1) {
-					e.types |= 1 << (j - 1);
+					e.addType(j);
 				}
 			}
 			if (e.types == 0) {
-				int x = 1 << Randomizer.rand(0, n_job_types - 1);
-				e.types |= x;
+				e.addType(Randomizer.rand(1, n_job_types));
 			}
 			Debugger.println(e.toString(), true);
 			es.add(e);
@@ -104,10 +109,29 @@ public class Scheduler {
 		PriorityQueue<Job> qjobs = new PriorityQueue<Job>(n_jobs, new Comparator<Job>() {
 			@Override
 			public int compare(Job j1, Job j2) {
-				if (j1.deadline == j2.deadline)
-					return j2.price - j1.price;
-				return j1.deadline - j2.deadline;
+				switch (jobSortingType) {
+				case DeadlineThenPrice:
+					if (j1.deadline == j2.deadline)
+						return j2.price - j1.price;
+					return j1.deadline - j2.deadline;
+				case TimeToDeadlineThenPrice:
+					int t1 = j1.deadline - current_time;
+					int t2 = j2.deadline - current_time;
+					if (t1 == t2)
+						return j2.price - j1.price;
+					return t1 - t2;
+				case PriceOverTimeToDeadline:
+					int tt1 = j1.deadline - current_time;
+					int tt2 = j2.deadline - current_time;
+					if (tt1 < 0 && tt2 > 0) return 1;
+					if (tt1 > 0 && tt2 < 0) return -1;
+					double r1 = (double)j1.price / (tt1 + 1);
+					double r2 = (double)j2.price / (tt2 + 1);
+					return Double.compare(r2, r1);
+				}
+				return 0;
 			}
+
 		});
 		Job last_job = jobs.get(0); // store the last scheduled job
 		qjobs.add(last_job); // the first job is pushed into a priority queue
@@ -178,7 +202,7 @@ public class Scheduler {
 			last_job = null;
 		total_time = last_job != null ? last_job.finish : 0;
 	}
-	
+
 	public void printJobs() {
 		for (Job job : jobs) {
 			Debugger.println(job.toString());
@@ -201,15 +225,15 @@ public class Scheduler {
 			++i;
 		}
 	}
-	
+
 	public void prepare() {
 		generateJobs();
 		generateEmployees();
 	}
-	
+
 	public void report() {
 		Debugger.println("Total time " + total_time, true);
-		Debugger.println("Total profit " + profit + " / " + ideal_profit, true);
+		Debugger.println(String.format("Total profit %d / %d (%.2f%%)", profit, ideal_profit, 100 * ((double)profit / ideal_profit)), true);
 		Debugger.println("Total jobs done " + jobs_done, true);
 	}
 

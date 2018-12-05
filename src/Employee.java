@@ -5,28 +5,35 @@ public class Employee {
 	public int types;
 	public boolean busy;
 	public int work_count;
+	public int type_count;
 
 	public Employee(int d) {
 		id = d;
 		types = 0;
 		busy = false;
 		work_count = 0;
+		type_count = 0;
 	}
 
 	public boolean capable(int type) {
 		return (types & (1 << (type - 1))) != 0;
 	}
 	
+	public void addType(int type) {
+		types |= 1 << (type - 1);
+	}
+	
 	// sub-linearly count the number of set bits of the given integer
 	// example: 00110110 -> 4
 	public int countJobTypes() {
-		int count = 0;
+		if (type_count != 0)
+			return type_count;
 		int t = types;
 		while (t != 0) {
 			t &= t - 1;
-			++count;
+			++type_count;
 		}
-		return count;
+		return type_count;
 	}
 
 	public String toStringShort() {
