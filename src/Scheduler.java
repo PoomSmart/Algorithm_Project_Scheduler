@@ -16,7 +16,7 @@ public class Scheduler {
 		DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
 	};
 
-	public static final JobSortingType jobSortingType = JobSortingType.PriceOverTimeToDeadline;
+	public JobSortingType jobSortingType;
 
 	public ArrayList<Job> jobs;
 	public ArrayList<Employee> es;
@@ -28,7 +28,7 @@ public class Scheduler {
 	public int ideal_profit; // maximum profit possible
 	public int jobs_done; // number of scheduled jobs
 
-	public Scheduler() {
+	public Scheduler(JobSortingType type) {
 		jobs = new ArrayList<Job>();
 		es = new ArrayList<Employee>();
 		max_deadline = 0;
@@ -37,6 +37,7 @@ public class Scheduler {
 		profit = 0;
 		ideal_profit = 0;
 		jobs_done = 0;
+		jobSortingType = type;
 	}
 
 	public void generateJobs() {
@@ -238,7 +239,7 @@ public class Scheduler {
 	}
 
 	public static void main(String[] args) {
-		Scheduler scheduler = new Scheduler();
+		Scheduler scheduler = new Scheduler(JobSortingType.PriceOverTimeToDeadline);
 		scheduler.prepare();
 		scheduler.schedule();
 		scheduler.printJobs();
