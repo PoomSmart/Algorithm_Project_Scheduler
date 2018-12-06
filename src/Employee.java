@@ -2,10 +2,10 @@
 public class Employee {
 
 	public int id;
-	public int types;
-	public boolean busy;
-	public int work_count;
-	public int type_count;
+	public int types; // representation of job types this employee can handle, one bit per type
+	public boolean busy; // whether this employee is busy dealing with a job
+	public int work_count; // how many jobs have been done by this employee
+	public int type_count; // how many job types this employee can handle
 
 	public Employee(int d) {
 		id = d;

@@ -18,8 +18,8 @@ public class Scheduler {
 
 	public JobSortingType jobSortingType;
 
-	public ArrayList<Job> jobs;
-	public ArrayList<Employee> es;
+	public ArrayList<Job> jobs; // a list of jobs
+	public ArrayList<Employee> es; // a list of employees
 
 	public int max_deadline; // maximum deadline among all jobs
 	public int current_time; // current time
@@ -167,6 +167,7 @@ public class Scheduler {
 					// if there is no such employee available, don't come in here
 					ct_println(job.toStringShort() + " will be handled by " + e.toStringShort());
 					e.busy = true; // mark the employee as busy
+					++e.work_count; // increment the number of jobs done for the employee
 					job.begin = current_time; // mark the job as scheduled
 					job.worker = e; // set who is responsible for this job
 					profit += job.price; // this job will be done, add the profit
@@ -231,6 +232,14 @@ public class Scheduler {
 		generateJobs();
 		generateEmployees();
 	}
+	
+	public void calculateEmployeeUtilization() {
+		ArrayList<Integer> workUtilization = new ArrayList<Integer>();
+		for (Employee e : es) {
+			workUtilization.add(e.work_count);
+		}
+		GraphPanel.constructGraph("Employee Utilization", workUtilization);
+	}
 
 	public void report() {
 		Debugger.println("Total time " + total_time, true);
@@ -244,6 +253,7 @@ public class Scheduler {
 		scheduler.schedule();
 		scheduler.printJobs();
 		scheduler.visualize();
+		scheduler.calculateEmployeeUtilization();
 		scheduler.report();
 	}
 

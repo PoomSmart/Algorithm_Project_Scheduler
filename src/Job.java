@@ -2,15 +2,15 @@
 public class Job {
 
 	public int id;
-	public int arrival;
-	public int length;
-	public int deadline;
-	public int price;
-	public int begin;
-	public int finish;
-	public int type;
+	public int arrival; // the arrival time of the job
+	public int length; // the length of the job
+	public int deadline; // the deadline of the job
+	public int price; // the cost of the job
+	public int begin; // the time that the job is scheduled
+	public int finish; // the finish time of the job
+	public int type; // the type of the job
 
-	public boolean dequeue;
+	public boolean dequeue; // whether the job should be removed from a priority queue
 
 	public Employee worker;
 
