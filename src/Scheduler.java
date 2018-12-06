@@ -155,7 +155,7 @@ public class Scheduler {
 					continue;
 				}
 				// if at this time the job exceeded its deadline, remove it from the queue
-				if (job.finish == -1 && current_time > job.deadline) {
+				if (job.finish == -1 && (current_time > job.deadline || current_time + job.length > job.deadline)) {
 					job.begin = -1; // mark the job as unscheduled
 					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					qjobs.poll();
@@ -181,13 +181,12 @@ public class Scheduler {
 				Job job = jobs.get(i);
 				if (job.dequeue)
 					continue;
-				if (job.finish == -1 && current_time > job.deadline) {
+				if (job.finish == -1 && (current_time > job.deadline || current_time + job.length > job.deadline)) {
 					// same as above, but we can't remove the job now / at such specified index on a
 					// priority queue
 					job.begin = -1;
 					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					job.dequeue = true;
-
 				}
 				if (!job.dequeue && job.worker != null && current_time == job.begin + job.length) {
 					// if at this time the job is finished
@@ -195,7 +194,8 @@ public class Scheduler {
 					job.dequeue = true; // the job will be removed
 					job.worker.busy = false; // the respective employee will be free
 					ct_println(String.format("Free %s from %s", job.worker.toStringShort(), job.toStringShort()));
-					last_job = job; // this is the most recent job that is scheduled
+					if (last_job == null || (last_job != null && job.finish > last_job.finish))
+						last_job = job; // this is the most recent job that is scheduled
 				}
 			}
 			++current_time;
@@ -218,7 +218,7 @@ public class Scheduler {
 				continue; // this job is not scheduled at all, skip
 			++jobs_done;
 			StringBuilder lane = new StringBuilder();
-			lane.append(String.format("%" + (job.arrival + (i > 0 ? 1 : 0)) + "s", " ") + "|");
+			lane.append(String.format("%" + (job.begin + (i > 0 ? 1 : 0)) + "s", " ") + "|");
 			lane.append(String.format("%s| %d", Debugger.repeat('-', job.length), job.id));
 			if (job.deadline != job.finish)
 				lane.append(String.format("%" + (job.deadline - job.finish) + "s", " "));
