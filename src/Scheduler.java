@@ -135,14 +135,14 @@ public class Scheduler {
 		});
 		Job last_job = jobs.get(0); // store the last scheduled job
 		qjobs.add(last_job); // the first job is pushed into a priority queue
-		ct_println(last_job.toStringShort() + " has arrived", true);
+		ct_println(last_job.toStringShort() + " has arrived");
 		int idx = 1;
 		boolean everScheduled = false;
 		while (current_time < max_deadline) {
 			Debugger.println("ct " + current_time);
 			// if at this time there are jobs arrived, push them all
 			while (idx < n_jobs && current_time == jobs.get(idx).arrival) {
-				ct_println(jobs.get(idx).toStringShort() + " has arrived", true);
+				ct_println(jobs.get(idx).toStringShort() + " has arrived");
 				qjobs.add(jobs.get(idx++));
 			}
 			// if there is any job in the queue to process
@@ -156,7 +156,7 @@ public class Scheduler {
 				// if at this time the job exceeded its deadline, remove it from the queue
 				if (job.finish == -1 && current_time > job.deadline) {
 					job.begin = -1; // mark the job as unscheduled
-					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline, true);
+					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					qjobs.poll();
 					continue;
 				}
@@ -183,7 +183,7 @@ public class Scheduler {
 					// same as above, but we can't remove the job now / at such specified index on a
 					// priority queue
 					job.begin = -1;
-					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline, true);
+					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					job.dequeue = true;
 
 				}
