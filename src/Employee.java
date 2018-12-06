@@ -40,6 +40,7 @@ public class Employee {
 		return String.format("Employee %d", id);
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(String.format("Employee %d is capable of ", id));
 		for (int i = 1; i <= Scheduler.n_job_types; ++i) {
