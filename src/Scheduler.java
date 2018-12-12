@@ -246,7 +246,7 @@ public class Scheduler {
 			max_job_types = Math.max(max_job_types, e.countJobTypes());
 		}
 		for (Employee e : es) {
-			colors.add(new Color(55 + (int)(200 * ((double)e.countJobTypes() / max_job_types)), 0, 0, 255));
+			colors.add(new Color(55 + (int) (200 * ((double) e.countJobTypes() / max_job_types)), 0, 0, 255));
 		}
 		GraphPanel.constructGraph("Employee Utilization", workUtilization, colors);
 	}

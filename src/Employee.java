@@ -18,11 +18,11 @@ public class Employee {
 	public boolean capable(int type) {
 		return (types & (1 << (type - 1))) != 0;
 	}
-	
+
 	public void addType(int type) {
 		types |= 1 << (type - 1);
 	}
-	
+
 	// sub-linearly count the number of set bits of the given integer
 	// example: 00110110 -> 4
 	public int countJobTypes() {

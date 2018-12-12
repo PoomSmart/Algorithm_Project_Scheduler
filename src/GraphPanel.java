@@ -62,7 +62,7 @@ public class GraphPanel extends JPanel {
 			}
 		}
 	}
-	
+
 	public Color getColor(int i) {
 		String key = data[i].split("|")[0];
 		Color color = colors.get(key);
@@ -83,7 +83,7 @@ public class GraphPanel extends JPanel {
 		double yScale = ((double) getHeight() - (2 * padding) - labelPadding) / getMaxValue();
 
 		List<List<Point>> graphPoints = new Vector<>();
-		
+
 		int baseY = getHeight() - padding - labelPadding;
 
 		// Adding points
@@ -99,7 +99,8 @@ public class GraphPanel extends JPanel {
 
 		// draw white background
 		g2.setColor(Color.WHITE);
-		g2.fillRect(padding + labelPadding, padding, getWidth() - (2 * padding) - labelPadding, getHeight() - (2 * padding) - labelPadding);
+		g2.fillRect(padding + labelPadding, padding, getWidth() - (2 * padding) - labelPadding,
+				getHeight() - (2 * padding) - labelPadding);
 		g2.setColor(Color.BLACK);
 
 		// create hatch marks and grid lines for y axis.
@@ -107,7 +108,8 @@ public class GraphPanel extends JPanel {
 		for (int i = 0; i < numberYDivisions + 1; i++) {
 			int x0 = padding + labelPadding;
 			int x1 = pointWidth + padding + labelPadding;
-			int y0 = getHeight() - ((i * (getHeight() - padding * 2 - labelPadding)) / numberYDivisions + padding + labelPadding);
+			int y0 = getHeight()
+					- ((i * (getHeight() - padding * 2 - labelPadding)) / numberYDivisions + padding + labelPadding);
 			int y1 = y0;
 			if (values.size() > 0) {
 				g2.setColor(gridColor);
