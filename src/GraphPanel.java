@@ -32,10 +32,11 @@ public class GraphPanel extends JPanel {
 	private int height = 400;
 	private int padding = 25;
 	private int labelPadding = 25;
-	private Color pointColor = new Color(100, 100, 100, 180);
+	private boolean customPointColor;
+	private Color pointColor;
 	private Color gridColor = new Color(200, 200, 200, 200);
 	private static final Stroke GRAPH_STROKE = new BasicStroke(2f);
-	private int pointWidth = 4;
+	private int pointWidth = 8;
 	private int numberYDivisions = 20;
 	private List<List<Integer>> values;
 	private int currentMaxIndex = 0;
@@ -44,12 +45,16 @@ public class GraphPanel extends JPanel {
 	public static boolean chart = false;
 	public static String[] data;
 	private Map<String, Color> colors = new HashMap<String, Color>();
+	private List<List<Color>> custom_colors;
 	private Integer maxValue = Integer.MIN_VALUE;
 
 	public static double xMultiplier = 1;
 
-	public GraphPanel(List<List<Integer>> values) {
+	public GraphPanel(List<List<Integer>> values, List<List<Color>> custom_colors) {
 		this.values = values;
+		this.custom_colors = custom_colors;
+		customPointColor = this.custom_colors != null;
+		pointColor = customPointColor ? null : new Color(100, 100, 100, 180);
 		for (List<Integer> subvalues : values) {
 			if (currentMaxSize < subvalues.size()) {
 				currentMaxIndex = values.indexOf(subvalues);
@@ -98,6 +103,7 @@ public class GraphPanel extends JPanel {
 		g2.setColor(Color.BLACK);
 
 		// create hatch marks and grid lines for y axis.
+		List<String> yLabels = new Vector<String>();
 		for (int i = 0; i < numberYDivisions + 1; i++) {
 			int x0 = padding + labelPadding;
 			int x1 = pointWidth + padding + labelPadding;
@@ -108,12 +114,16 @@ public class GraphPanel extends JPanel {
 				g2.drawLine(padding + labelPadding + 1 + pointWidth, y0, getWidth() - padding, y1);
 				g2.setColor(Color.BLACK);
 				String yLabel = ((int) ((getMaxValue()) * ((i * 1.0) / numberYDivisions) * 100)) / 100 + "";
-				FontMetrics metrics = g2.getFontMetrics();
-				int labelWidth = metrics.stringWidth(yLabel);
-				g2.drawString(yLabel, x0 - labelWidth - 5, y0 + (metrics.getHeight() / 2) - 3);
+				if (!yLabels.contains(yLabel)) {
+					FontMetrics metrics = g2.getFontMetrics();
+					int labelWidth = metrics.stringWidth(yLabel);
+					g2.drawString(yLabel, x0 - labelWidth - 5, y0 + (metrics.getHeight() / 2) - 3);
+					yLabels.add(yLabel);
+				}
 			}
 			g2.drawLine(x0, y0, x1, y1);
 		}
+		yLabels = null;
 
 		// and for x axis
 		for (int i = 0; i < values.get(currentMaxIndex).size(); i++) {
@@ -166,15 +176,22 @@ public class GraphPanel extends JPanel {
 		}
 
 		g2.setStroke(oldStroke);
-		g2.setColor(pointColor);
+		if (pointColor != null)
+			g2.setColor(pointColor);
+		int idx = 0;
 		for (List<Point> subgraphPoints : graphPoints) {
 			for (int i = 0; i < subgraphPoints.size(); i++) {
 				int x = subgraphPoints.get(i).x - pointWidth / 2;
 				int y = subgraphPoints.get(i).y - pointWidth / 2;
 				int ovalW = pointWidth;
 				int ovalH = pointWidth;
+				if (customPointColor)
+					g2.setColor(custom_colors.get(idx).get(i));
+				else
+					g2.setColor(pointColor);
 				g2.fillOval(x, y, ovalW, ovalH);
 			}
+			idx++;
 		}
 	}
 
@@ -213,8 +230,8 @@ public class GraphPanel extends JPanel {
 		return values;
 	}
 
-	public static void _constructGraphs(String name, List<List<Integer>> values) {
-		GraphPanel mainPanel = new GraphPanel(values);
+	public static void _constructGraphs(String name, List<List<Integer>> values, List<List<Color>> colors) {
+		GraphPanel mainPanel = new GraphPanel(values, colors);
 		JFrame frame = new JFrame(name);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(mainPanel);
@@ -223,16 +240,21 @@ public class GraphPanel extends JPanel {
 		frame.setVisible(true);
 	}
 
-	public static void constructGraphs(List<List<Integer>> values) {
-		_constructGraphs(null, values);
+	public static void constructGraphs(List<List<Integer>> values, List<List<Color>> colors) {
+		_constructGraphs(null, values, colors);
 	}
 
-	public static void constructGraph(String name, Collection<Integer> values) {
+	public static void constructGraph(String name, Collection<Integer> values, List<Color> colors) {
 		List<List<Integer>> c_values = new Vector<>();
+		List<List<Color>> c_colors = new Vector<>();
 		List<Integer> subvalues = new Vector<>();
+		List<Color> subcolors = new Vector<>();
 		for (Integer d : values)
 			subvalues.add(d);
 		c_values.add(subvalues);
-		_constructGraphs(name, c_values);
+		for (Color c : colors)
+			subcolors.add(c);
+		c_colors.add(subcolors);
+		_constructGraphs(name, c_values, c_colors);
 	}
 }

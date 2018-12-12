@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -5,12 +6,12 @@ import java.util.PriorityQueue;
 
 public class Scheduler {
 
-	public static final int n_jobs = 100;
-	public static final int n_job_types = 6;
-	public static final int n_employees = 50;
+	public static final int n_jobs = Constants.n_jobs;
+	public static final int n_job_types = Constants.n_job_types;
+	public static final int n_employees = Constants.n_employees;
 
-	public static final int lower = 4;
-	public static final int upper = 20;
+	public static final int lower = Constants.lower;
+	public static final int upper = Constants.upper;
 
 	public static enum JobSortingType {
 		DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
@@ -27,6 +28,8 @@ public class Scheduler {
 	public int profit; // total profit from scheduled jobs
 	public int ideal_profit; // maximum profit possible
 	public int jobs_done; // number of scheduled jobs
+
+	private int max_job_types = 0;
 
 	public Scheduler(JobSortingType type) {
 		jobs = new ArrayList<Job>();
@@ -124,10 +127,12 @@ public class Scheduler {
 				case PriceOverTimeToDeadline:
 					int tt1 = j1.deadline - current_time;
 					int tt2 = j2.deadline - current_time;
-					if (tt1 < 0 && tt2 > 0) return 1;
-					if (tt1 > 0 && tt2 < 0) return -1;
-					double r1 = (double)j1.price / (tt1 + 1);
-					double r2 = (double)j2.price / (tt2 + 1);
+					if (tt1 < 0 && tt2 > 0)
+						return 1;
+					if (tt1 > 0 && tt2 < 0)
+						return -1;
+					double r1 = (double) j1.price / (tt1 + 1);
+					double r2 = (double) j2.price / (tt2 + 1);
 					return Double.compare(r2, r1);
 				}
 				return 0;
@@ -232,19 +237,26 @@ public class Scheduler {
 		generateJobs();
 		generateEmployees();
 	}
-	
+
 	public void calculateEmployeeUtilization() {
 		ArrayList<Integer> workUtilization = new ArrayList<Integer>();
+		ArrayList<Color> colors = new ArrayList<Color>();
 		for (Employee e : es) {
 			workUtilization.add(e.work_count);
+			max_job_types = Math.max(max_job_types, e.countJobTypes());
 		}
-		GraphPanel.constructGraph("Employee Utilization", workUtilization);
+		for (Employee e : es) {
+			colors.add(new Color(55 + (int)(200 * ((double)e.countJobTypes() / max_job_types)), 0, 0, 255));
+		}
+		GraphPanel.constructGraph("Employee Utilization", workUtilization, colors);
 	}
 
 	public void report() {
 		Debugger.println("Total time " + total_time, true);
-		Debugger.println(String.format("Total profit %d / %d (%.2f%%)", profit, ideal_profit, 100 * ((double)profit / ideal_profit)), true);
-		Debugger.println(String.format("Total jobs done %d / %d (%.2f%%)", jobs_done, n_jobs, 100 * ((double)jobs_done / n_jobs)), true);
+		Debugger.println(String.format("Total profit %d / %d (%.2f%%)", profit, ideal_profit,
+				100 * ((double) profit / ideal_profit)), true);
+		Debugger.println(String.format("Total jobs done %d / %d (%.2f%%)", jobs_done, n_jobs,
+				100 * ((double) jobs_done / n_jobs)), true);
 	}
 
 	public static void main(String[] args) {
