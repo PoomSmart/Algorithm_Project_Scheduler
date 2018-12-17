@@ -104,6 +104,7 @@ public class Scheduler {
 			if (e.capable(type) && !e.busy)
 				candidates.add(e);
 		}
+		Debugger.println("Best employee for " + job.toString() + " is " + candidates);
 		// the first employee in the queue is the best candidate
 		return candidates.peek();
 	}
@@ -175,7 +176,6 @@ public class Scheduler {
 					++e.work_count; // increment the number of jobs done for the employee
 					job.begin = current_time; // mark the job as scheduled
 					job.worker = e; // set who is responsible for this job
-					profit += job.price; // this job will be done, add the profit
 					qjobs.poll(); // we are done with this job
 					everScheduled = true;
 				}
@@ -222,6 +222,7 @@ public class Scheduler {
 			if (job.begin == -1)
 				continue; // this job is not scheduled at all, skip
 			++jobs_done;
+			profit += job.price; // this job will be done, add the profit
 			StringBuilder lane = new StringBuilder();
 			lane.append(String.format("%" + (job.begin + (i > 0 ? 1 : 0)) + "s", " ") + "|");
 			lane.append(String.format("%s| %d", Debugger.repeat('-', job.length), job.id));
