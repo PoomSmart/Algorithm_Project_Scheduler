@@ -29,8 +29,8 @@ public class Job {
 
 	@Override
 	public String toString() {
-		return String.format("Job %d (type %d, arrival %d, length %d, deadline %d)", id, type, arrival, length,
-				deadline);
+		return String.format("Job %d (type %d, arrival %d, length %d, deadline %d, price %d)", id, type, arrival, length,
+				deadline, price);
 	}
 
 	@Override

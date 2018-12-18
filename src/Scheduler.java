@@ -22,8 +22,8 @@ public class Scheduler {
 	public ArrayList<Job> jobs; // a list of jobs
 	public ArrayList<Employee> es; // a list of employees
 
-	public int max_deadline; // maximum deadline among all jobs
 	public int current_time; // current time
+	public int max_known_deadline; // maximum job deadline known to the scheduler
 	public int total_time; // total time used for scheduling
 	public int profit; // total profit from scheduled jobs
 	public int ideal_profit; // maximum profit possible
@@ -34,8 +34,8 @@ public class Scheduler {
 	public Scheduler(JobSortingType type) {
 		jobs = new ArrayList<Job>();
 		es = new ArrayList<Employee>();
-		max_deadline = 0;
 		current_time = 0;
+		max_known_deadline = 0;
 		total_time = 0;
 		profit = 0;
 		ideal_profit = 0;
@@ -49,7 +49,6 @@ public class Scheduler {
 			job.arrival = Randomizer.rand(lower, upper * 4);
 			job.length = Randomizer.rand(lower, upper) / 2;
 			job.deadline = job.arrival + job.length + Randomizer.rand(lower, upper);
-			max_deadline = Math.max(max_deadline, job.deadline);
 			job.price = (lower + Randomizer.rand(0, upper / 2)) * 10;
 			ideal_profit += job.price;
 			job.type = Randomizer.rand(1, n_job_types);
@@ -89,8 +88,10 @@ public class Scheduler {
 		ct_println(s, false);
 	}
 
+	// Complexity: O(n_employees * log(n_employees))
 	public Employee bestEmployeeFor(Job job) {
 		int type = job.type;
+		// priority queue for employee candidates: O(n_employees * log(n_employees))
 		PriorityQueue<Employee> candidates = new PriorityQueue<Employee>(n_employees, new Comparator<Employee>() {
 			@Override
 			public int compare(Employee e1, Employee e2) {
@@ -109,8 +110,14 @@ public class Scheduler {
 		return candidates.peek();
 	}
 
+	// Estimated complexity: max(n_jobs, max{job_deadline}) * (
+	//							n_jobs * log^2(n_jobs) +
+	//							n_employees * log(n_employees) +
+	//							n_jobs)
+	// O(max{nj, jd} * max{nj*log^2(nj), ne*log(ne)})
 	public void schedule() {
 		current_time = jobs.get(0).arrival; // fast forward to the very first job that arrived
+		// priority queue for jobs: O(n_jobs * log(n_jobs))
 		PriorityQueue<Job> qjobs = new PriorityQueue<Job>(n_jobs, new Comparator<Job>() {
 			@Override
 			public int compare(Job j1, Job j2) {
@@ -141,16 +148,24 @@ public class Scheduler {
 
 		});
 		Job last_job = jobs.get(0); // store the last scheduled job
+		max_known_deadline = Math.max(max_known_deadline, last_job.deadline);
 		qjobs.add(last_job); // the first job is pushed into a priority queue
 		ct_println(last_job.toStringShort() + " has arrived");
 		int idx = 1;
 		boolean everScheduled = false;
-		while (current_time < max_deadline) {
+		// The algorithm proceeds if there are more jobs to see or the maximum deadline so far is yet to exceed
+		// Complexity: O(max(n_jobs, max{job_deadline}))
+		while (idx < n_jobs || current_time < max_known_deadline) {
 			Debugger.println("ct " + current_time);
 			// if at this time there are jobs arrived, push them all
+			// Practically, there will not be too many jobs arrived at the same time
+			// O(log(n_jobs) * n_jobs * log(n_jobs)) = O(n_jobs * log^2(n_jobs))
 			while (idx < n_jobs && current_time == jobs.get(idx).arrival) {
-				ct_println(jobs.get(idx).toStringShort() + " has arrived");
-				qjobs.add(jobs.get(idx++));
+				Job job = jobs.get(idx);
+				max_known_deadline = Math.max(max_known_deadline, job.deadline);
+				ct_println(job.toStringShort() + " has arrived");
+				qjobs.add(job);
+				++idx;
 			}
 			// if there is any job in the queue to process
 			if (!qjobs.isEmpty()) {
@@ -163,6 +178,7 @@ public class Scheduler {
 				// if at this time the job exceeded its deadline, remove it from the queue
 				if (job.finish == -1 && (current_time > job.deadline || current_time + job.length > job.deadline)) {
 					job.begin = -1; // mark the job as unscheduled
+					job.worker = null; // no worker should be assigned
 					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					qjobs.poll();
 					continue;
@@ -180,7 +196,7 @@ public class Scheduler {
 					everScheduled = true;
 				}
 			}
-			// O(n) logic to ensure jobs that must be dequeued are dequeued
+			// O(n_jobs) logic to ensure jobs that must be dequeued are dequeued
 			// should have been improved
 			for (int i = 0; i < n_jobs; ++i) {
 				Job job = jobs.get(i);
@@ -190,6 +206,7 @@ public class Scheduler {
 					// same as above, but we can't remove the job now / at such specified index on a
 					// priority queue
 					job.begin = -1;
+					job.worker = null; // no worker should be assigned
 					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					job.dequeue = true;
 				}

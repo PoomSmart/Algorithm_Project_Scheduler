@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Scheduler",
+            "request": "launch",
+            "mainClass": "Scheduler",
+            "projectName": "Algorithm_Project_Scheduler"
+        }
+    ]
+}
