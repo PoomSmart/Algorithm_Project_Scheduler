@@ -75,6 +75,7 @@ public class Scheduler {
 			if (e.types == 0) {
 				e.addType(Randomizer.rand(1, n_job_types));
 			}
+			max_job_types = Math.max(max_job_types, e.countJobTypes());
 			Debugger.println(e.toString(), true);
 			es.add(e);
 		}
@@ -111,9 +112,9 @@ public class Scheduler {
 	}
 
 	// Estimated complexity: max(n_jobs, max{job_deadline}) * (
-	//							n_jobs * log^2(n_jobs) +
-	//							n_employees * log(n_employees) +
-	//							n_jobs)
+	// n_jobs * log^2(n_jobs) +
+	// n_employees * log(n_employees) +
+	// n_jobs)
 	// O(max{nj, jd} * max{nj*log^2(nj), ne*log(ne)})
 	public void schedule() {
 		current_time = jobs.get(0).arrival; // fast forward to the very first job that arrived
@@ -148,12 +149,13 @@ public class Scheduler {
 
 		});
 		Job last_job = jobs.get(0); // store the last scheduled job
-		max_known_deadline = Math.max(max_known_deadline, last_job.deadline);
+		max_known_deadline = last_job.deadline;
 		qjobs.add(last_job); // the first job is pushed into a priority queue
 		ct_println(last_job.toStringShort() + " has arrived");
 		int idx = 1;
 		boolean everScheduled = false;
-		// The algorithm proceeds if there are more jobs to see or the maximum deadline so far is yet to exceed
+		// The algorithm proceeds if there are more jobs to see or the maximum deadline
+		// so far is yet to exceed
 		// Complexity: O(max(n_jobs, max{job_deadline}))
 		while (idx < n_jobs || current_time < max_known_deadline) {
 			Debugger.println("ct " + current_time);
@@ -261,9 +263,6 @@ public class Scheduler {
 		ArrayList<Color> colors = new ArrayList<Color>();
 		for (Employee e : es) {
 			workUtilization.add(e.work_count);
-			max_job_types = Math.max(max_job_types, e.countJobTypes());
-		}
-		for (Employee e : es) {
 			colors.add(new Color(55 + (int) (200 * ((double) e.countJobTypes() / max_job_types)), 0, 0, 255));
 		}
 		GraphPanel.constructGraph("Employee Utilization", workUtilization, colors);
