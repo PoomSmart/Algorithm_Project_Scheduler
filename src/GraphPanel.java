@@ -38,6 +38,7 @@ public class GraphPanel extends JPanel {
 	private static final Stroke GRAPH_STROKE = new BasicStroke(2f);
 	private int pointWidth = 8;
 	private int numberYDivisions;
+	private int numberYInterval = 500;
 	private List<List<Integer>> values;
 	private int currentMaxIndex = 0;
 	private int currentMaxSize = 0;
@@ -116,8 +117,9 @@ public class GraphPanel extends JPanel {
 		for (int i = 0; i < numberYDivisions + 1; ++i) {
 			if (!values.isEmpty()) {
 				g2.setColor(gridColor);
-				String yLabel = ((int) ((getMaxValue()) * ((i * 1.0) / numberYDivisions) * 100)) / 100 + "";
-				if (!yLabels.contains(yLabel)) {
+				int y = ((int) ((getMaxValue()) * ((i * 1.0) / numberYDivisions) * 100)) / 100;
+				String yLabel = y + "";
+				if (y % numberYInterval == 0 && !yLabels.contains(yLabel)) {
 					y0 = baseY - (int) (i * yScale);
 					g2.drawLine(x1 + 1, y0, getWidth() - padding, y0);
 					g2.setColor(Color.BLACK);
@@ -252,15 +254,19 @@ public class GraphPanel extends JPanel {
 
 	public static void constructGraph(String name, Collection<Integer> values, List<Color> colors) {
 		List<List<Integer>> c_values = new Vector<>();
-		List<List<Color>> c_colors = new Vector<>();
+		List<List<Color>> c_colors;
 		List<Integer> subvalues = new Vector<>();
 		List<Color> subcolors = new Vector<>();
 		for (Integer d : values)
 			subvalues.add(d);
 		c_values.add(subvalues);
-		for (Color c : colors)
-			subcolors.add(c);
-		c_colors.add(subcolors);
+		if (colors != null) {
+			c_colors = new Vector<>();
+			for (Color c : colors)
+				subcolors.add(c);
+			c_colors.add(subcolors);
+		} else
+			c_colors = null;
 		_constructGraphs(name, c_values, c_colors);
 	}
 }

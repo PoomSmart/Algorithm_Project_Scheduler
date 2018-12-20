@@ -17,8 +17,11 @@ public class Job {
 
 	public Job(int d) {
 		id = d;
+		arrival = -1;
 		begin = -1;
 		finish = -1;
+		deadline = -1;
+		price = 0;
 		type = 0;
 		worker = null;
 		dequeue = false;

@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class Scheduler {
@@ -41,6 +42,27 @@ public class Scheduler {
 		ideal_profit = 0;
 		jobs_done = 0;
 		jobSortingType = type;
+	}
+
+	public void looseCopyFrom(Scheduler s) {
+		for (Job j : s.jobs) {
+			Job jc = new Job(-j.id);
+			jc.type = j.type;
+			jc.length = j.length;
+			jc.arrival = j.arrival;
+			jc.deadline = j.deadline;
+			jc.price = j.price;
+			jobs.add(jc);
+		}
+		for (Employee e : s.es) {
+			Employee ec = new Employee(-e.id);
+			ec.types = e.types;
+			ec.type_count = e.type_count;
+			es.add(ec);
+		}
+		ideal_profit = s.ideal_profit;
+		max_job_types = s.max_job_types;
+		jobSortingType = s.jobSortingType;
 	}
 
 	public void generateJobs() {
@@ -91,7 +113,6 @@ public class Scheduler {
 
 	// Complexity: O(n_employees * log(n_employees))
 	public Employee bestEmployeeFor(Job job) {
-		int type = job.type;
 		// priority queue for employee candidates: O(n_employees * log(n_employees))
 		PriorityQueue<Employee> candidates = new PriorityQueue<Employee>(n_employees, new Comparator<Employee>() {
 			@Override
@@ -103,7 +124,7 @@ public class Scheduler {
 		ct_println("Find candidates for " + job.toStringShort() + " of type " + job.type);
 		for (Employee e : es) {
 			// check if this employee can work this job and is not busy
-			if (e.capable(type) && !e.busy)
+			if (e.capable(job.type) && !e.busy)
 				candidates.add(e);
 		}
 		Debugger.println("Best employee for " + job.toString() + " is " + candidates);
@@ -276,14 +297,82 @@ public class Scheduler {
 				100 * ((double) jobs_done / n_jobs)), true);
 	}
 
+	public int operate() {
+		schedule();
+		printJobs();
+		visualize();
+		report();
+		return profit << 16 | jobs_done;
+	}
+
+	static class ArbitraryScheduler extends Scheduler {
+
+		public ArbitraryScheduler(JobSortingType type) {
+			super(type);
+		}
+
+		@Override
+		public Employee bestEmployeeFor(Job job) {
+			ArrayList<Employee> employees = new ArrayList<Employee>();
+			for (Employee e : es) {
+				if (e.capable(job.type) && !e.busy) {
+					employees.add(e);
+				}
+			}
+			Employee candidate = employees.isEmpty() ? null : employees.get(Randomizer.rand(0, employees.size() - 1));
+			employees = null;
+			return candidate;
+		}
+
+		@Override
+		public int operate() {
+			Debugger.enabled = false;
+			schedule();
+			printJobs();
+			visualize();
+			Debugger.enabled = true;
+			report();
+			return profit << 16 | jobs_done;
+		}
+
+		public int operate(int p) {
+			Debugger.println("Permutation: " + p, true);
+			return operate();
+		}
+
+	}
+
 	public static void main(String[] args) {
-		Scheduler scheduler = new Scheduler(JobSortingType.PriceOverTimeToDeadline);
-		scheduler.prepare();
-		scheduler.schedule();
-		scheduler.printJobs();
-		scheduler.visualize();
-		scheduler.calculateEmployeeUtilization();
-		scheduler.report();
+		Scheduler s = new Scheduler(JobSortingType.PriceOverTimeToDeadline);
+		Debugger.enabled = false;
+		s.prepare();
+		Debugger.enabled = true;
+		s.operate();
+		// s.calculateEmployeeUtilization();
+		int max_profit = s.profit;
+		int max_p = 0;
+		ArrayList<Integer> profits = new ArrayList<Integer>();
+		ArrayList<Integer> a_profits = new ArrayList<Integer>();
+		for (int i = 1; i <= 50; ++i) {
+			profits.add(s.profit);
+			ArbitraryScheduler as = new ArbitraryScheduler(s.jobSortingType);
+			as.looseCopyFrom(s);
+			int a_profit = as.operate(i) >> 16;
+			if (a_profit > max_profit) {
+				max_profit = a_profit;
+				max_p = i;
+			}
+			a_profits.add(a_profit);
+			as = null;
+		}
+		if (max_p != 0) {
+			System.out.println("Max Permutation: " + max_p);
+			System.out.println("Profit: " + max_profit + " versus " + s.profit);
+		}
+		List<List<Integer>> all_profits = new ArrayList<>();
+		all_profits.add(profits);
+		all_profits.add(a_profits);
+		GraphPanel._constructGraphs("Permutation versus Reality", all_profits, null);
 	}
 
 }

@@ -2,6 +2,7 @@
 public class Debugger {
 
 	private static final boolean debug = false;
+	public static boolean enabled = true;
 
 	public static void println() {
 		println(false);
@@ -16,11 +17,12 @@ public class Debugger {
 	}
 
 	public static void println(String s, boolean public_) {
-		if (public_ || debug)
+		if (enabled && (public_ || debug)) {
 			if (s != null)
 				System.out.println(s);
 			else
 				System.out.println();
+		}
 	}
 
 	public static void print(String s) {
@@ -28,7 +30,7 @@ public class Debugger {
 	}
 
 	public static void print(String s, boolean public_) {
-		if (public_ || debug)
+		if (enabled && (public_ || debug))
 			System.out.print(s);
 	}
 
