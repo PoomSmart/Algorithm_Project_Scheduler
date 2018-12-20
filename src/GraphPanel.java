@@ -39,6 +39,7 @@ public class GraphPanel extends JPanel {
 	private int pointWidth = 8;
 	private int numberYDivisions;
 	private int numberYInterval = 500;
+	private int maxYValue;
 	private List<List<Integer>> values;
 	private int currentMaxIndex = 0;
 	private int currentMaxSize = 0;
@@ -64,7 +65,8 @@ public class GraphPanel extends JPanel {
 				currentMaxSize = subvalues.size();
 			}
 		}
-		numberYDivisions = getMaxValue();
+		maxYValue = getMaxValue() + numberYInterval - (getMaxValue() % numberYInterval);
+		numberYDivisions = maxYValue;
 	}
 
 	public Color getColor(int i) {
@@ -89,7 +91,7 @@ public class GraphPanel extends JPanel {
 		int gridHeight = baseY - padding;
 
 		double xScale = (double) gridWidth / (values.get(currentMaxIndex).size() - 1);
-		double yScale = (double) gridHeight / getMaxValue();
+		double yScale = (double) gridHeight / maxYValue;
 
 		int x0, x1, y0, y1;
 
@@ -111,22 +113,22 @@ public class GraphPanel extends JPanel {
 		g2.fillRect(leftPadding, padding, gridWidth, gridHeight);
 
 		// create hatch marks and grid lines for y axis.
-		List<String> yLabels = new Vector<String>();
+		List<Integer> yLabels = new Vector<Integer>();
 		x0 = padding + labelPadding;
 		x1 = x0 + pointWidth;
 		for (int i = 0; i < numberYDivisions + 1; ++i) {
 			if (!values.isEmpty()) {
 				g2.setColor(gridColor);
-				int y = ((int) ((getMaxValue()) * ((i * 1.0) / numberYDivisions) * 100)) / 100;
-				String yLabel = y + "";
-				if (y % numberYInterval == 0 && !yLabels.contains(yLabel)) {
+				int y = ((int) (maxYValue * ((i * 1.0) / numberYDivisions) * 100)) / 100;
+				if (i % numberYInterval == 0 && !yLabels.contains(y)) {
+					String yLabel = y + "";
 					y0 = baseY - (int) (i * yScale);
 					g2.drawLine(x1 + 1, y0, getWidth() - padding, y0);
 					g2.setColor(Color.BLACK);
 					FontMetrics metrics = g2.getFontMetrics();
 					int labelWidth = metrics.stringWidth(yLabel);
 					g2.drawString(yLabel, x0 - labelWidth - 5, y0 + (metrics.getHeight() / 2) - 3);
-					yLabels.add(yLabel);
+					yLabels.add(y);
 					g2.drawLine(x0, y0, x1, y0);
 				}
 			}
