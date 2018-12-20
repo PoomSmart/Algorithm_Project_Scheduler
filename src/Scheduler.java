@@ -279,14 +279,18 @@ public class Scheduler {
 		generateEmployees();
 	}
 
-	public void calculateEmployeeUtilization() {
+	public void calculateEmployeeUtilization(String suffix) {
 		ArrayList<Integer> workUtilization = new ArrayList<Integer>();
 		ArrayList<Color> colors = new ArrayList<Color>();
 		for (Employee e : es) {
 			workUtilization.add(e.work_count);
 			colors.add(new Color(55 + (int) (200 * ((double) e.countJobTypes() / max_job_types)), 0, 0, 255));
 		}
-		GraphPanel.constructGraph("Employee Utilization", workUtilization, colors);
+		GraphPanel.constructGraph("Employee Utilization" + " " + suffix, workUtilization, colors);
+	}
+	
+	public void calculateEmployeeUtilization() {
+		calculateEmployeeUtilization("");
 	}
 
 	public void report() {
@@ -325,6 +329,11 @@ public class Scheduler {
 			employees = null;
 			return candidate;
 		}
+		
+		@Override
+		public void calculateEmployeeUtilization() {
+			calculateEmployeeUtilization(p + "");
+		}
 
 		@Override
 		public int operate() {
@@ -345,7 +354,7 @@ public class Scheduler {
 		s.prepare();
 		Debugger.enabled = true;
 		s.operate();
-		// s.calculateEmployeeUtilization();
+		s.calculateEmployeeUtilization();
 		int max_profit = s.profit;
 		int max_p = 0;
 		ArrayList<Integer> profits = new ArrayList<Integer>();
