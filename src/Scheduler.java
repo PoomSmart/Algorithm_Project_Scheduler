@@ -307,6 +307,8 @@ public class Scheduler {
 
 	static class ArbitraryScheduler extends Scheduler {
 
+		public int p;
+
 		public ArbitraryScheduler(JobSortingType type) {
 			super(type);
 		}
@@ -335,11 +337,6 @@ public class Scheduler {
 			return profit << 16 | jobs_done;
 		}
 
-		public int operate(int p) {
-			Debugger.println("Permutation: " + p, true);
-			return operate();
-		}
-
 	}
 
 	public static void main(String[] args) {
@@ -353,21 +350,27 @@ public class Scheduler {
 		int max_p = 0;
 		ArrayList<Integer> profits = new ArrayList<Integer>();
 		ArrayList<Integer> a_profits = new ArrayList<Integer>();
+		ArbitraryScheduler as, best_as = null;
 		for (int i = 1; i <= 50; ++i) {
 			profits.add(s.profit);
-			ArbitraryScheduler as = new ArbitraryScheduler(s.jobSortingType);
+			as = new ArbitraryScheduler(s.jobSortingType);
+			as.p = i;
 			as.looseCopyFrom(s);
-			int a_profit = as.operate(i) >> 16;
+			Debugger.println("Permutation: " + as.p, true);
+			int a_profit = as.operate() >> 16;
 			if (a_profit > max_profit) {
 				max_profit = a_profit;
-				max_p = i;
-			}
+				max_p = as.p;
+				best_as = as;
+			} else
+				as = null;
 			a_profits.add(a_profit);
-			as = null;
+
 		}
 		if (max_p != 0) {
 			System.out.println("Max Permutation: " + max_p);
 			System.out.println("Profit: " + max_profit + " versus " + s.profit);
+			best_as.calculateEmployeeUtilization();
 		}
 		List<List<Integer>> all_profits = new ArrayList<>();
 		all_profits.add(profits);
