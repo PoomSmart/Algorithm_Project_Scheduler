@@ -51,6 +51,7 @@ public class GraphPanel extends JPanel {
 	private Integer maxValue = Integer.MIN_VALUE;
 	private boolean everyX = true;
 	private int xValueShift = 1;
+	private boolean largeData;
 
 	public static double xMultiplier = 1;
 
@@ -65,7 +66,14 @@ public class GraphPanel extends JPanel {
 				currentMaxSize = subvalues.size();
 			}
 		}
-		maxYValue = getMaxValue() + numberYInterval - (getMaxValue() % numberYInterval);
+		if (getMaxValue() > numberYInterval) {
+			maxYValue = getMaxValue() + numberYInterval - (getMaxValue() % numberYInterval);
+			largeData = true;
+		}
+		else {
+			maxYValue = getMaxValue();
+			largeData = false;
+		}
 		numberYDivisions = maxYValue;
 	}
 
@@ -120,16 +128,18 @@ public class GraphPanel extends JPanel {
 			if (!values.isEmpty()) {
 				g2.setColor(gridColor);
 				int y = ((int) (maxYValue * ((i * 1.0) / numberYDivisions) * 100)) / 100;
-				if (i % numberYInterval == 0 && !yLabels.contains(y)) {
-					String yLabel = y + "";
-					y0 = baseY - (int) (i * yScale);
-					g2.drawLine(x1 + 1, y0, getWidth() - padding, y0);
-					g2.setColor(Color.BLACK);
-					FontMetrics metrics = g2.getFontMetrics();
-					int labelWidth = metrics.stringWidth(yLabel);
-					g2.drawString(yLabel, x0 - labelWidth - 5, y0 + (metrics.getHeight() / 2) - 3);
-					yLabels.add(y);
-					g2.drawLine(x0, y0, x1, y0);
+				if (!yLabels.contains(y)) {
+					if (!largeData || (largeData && i % numberYInterval == 0)) {
+						String yLabel = y + "";
+						y0 = baseY - (int) (i * yScale);
+						g2.drawLine(x1 + 1, y0, getWidth() - padding, y0);
+						g2.setColor(Color.BLACK);
+						FontMetrics metrics = g2.getFontMetrics();
+						int labelWidth = metrics.stringWidth(yLabel);
+						g2.drawString(yLabel, x0 - labelWidth - 5, y0 + (metrics.getHeight() / 2) - 3);
+						yLabels.add(y);
+						g2.drawLine(x0, y0, x1, y0);
+					}
 				}
 			}
 		}
