@@ -207,7 +207,7 @@ public class Scheduler {
 				if (job.finish == -1 && (current_time > job.deadline || current_time + job.length > job.deadline)) {
 					// same as above, but we can't remove the job now / at such specified index on a
 					// priority queue
-					job.begin = -1;
+					job.begin = -1; // mark the job as unscheduled
 					job.worker = null; // no worker should be assigned
 					ct_println(job.toStringShort() + " exceeded the deadline of " + job.deadline);
 					job.dequeue = true;
