@@ -6,6 +6,7 @@ public class Employee {
 	public boolean busy; // whether this employee is busy dealing with a job
 	public int work_count; // how many jobs have been done by this employee
 	public int type_count; // how many job types this employee can handle
+	public String toString;
 
 	public Employee(int d) {
 		id = d;
@@ -13,6 +14,7 @@ public class Employee {
 		busy = false;
 		work_count = 0;
 		type_count = 0;
+		toString = null;
 	}
 
 	public boolean capable(int type) {
@@ -42,13 +44,16 @@ public class Employee {
 
 	@Override
 	public String toString() {
+		if (toString != null)
+			return toString;
 		StringBuilder sb = new StringBuilder(String.format("Employee %d is capable of ", id));
 		for (int i = 1; i <= Scheduler.n_job_types; ++i) {
 			if (capable(i)) {
 				sb.append(i + " ");
 			}
 		}
-		return sb.toString();
+		sb.deleteCharAt(sb.length() - 1);
+		return toString = sb.toString();
 	}
 
 	@Override
