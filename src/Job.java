@@ -9,6 +9,7 @@ public class Job {
 	public int begin; // the time that the job is scheduled
 	public int finish; // the finish time of the job
 	public int type; // the type of the job
+	public String toString;
 
 	public boolean dequeue; // whether the job should be removed from a priority queue
 
@@ -21,6 +22,7 @@ public class Job {
 		type = 0;
 		worker = null;
 		dequeue = false;
+		toString = null;
 	}
 
 	public String toStringShort() {
@@ -29,7 +31,9 @@ public class Job {
 
 	@Override
 	public String toString() {
-		return String.format("Job %d (type %d, arrival %d, length %d, deadline %d, price %d)", id, type, arrival, length,
+		if (toString != null)
+			return toString;
+		return toString = String.format("Job %d (type %d, arrival %d, length %d, deadline %d, price %d)", id, type, arrival, length,
 				deadline, price);
 	}
 
