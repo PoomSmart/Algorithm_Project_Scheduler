@@ -36,8 +36,8 @@ public class Job {
 	public String toString() {
 		if (toString != null)
 			return toString;
-		return toString = String.format("Job %d (type %d, arrival %d, length %d, deadline %d, price %d)", id, type, arrival, length,
-				deadline, price);
+		return toString = String.format("Job %d: type %d arrival %d length %d deadline %d price %d", id, type,
+				arrival, length, deadline, price);
 	}
 
 	@Override

@@ -46,7 +46,7 @@ public class Employee {
 	public String toString() {
 		if (toString != null)
 			return toString;
-		StringBuilder sb = new StringBuilder(String.format("Employee %d is capable of ", id));
+		StringBuilder sb = new StringBuilder(String.format("Employee %d: ", id));
 		for (int i = 1; i <= Scheduler.n_job_types; ++i) {
 			if (capable(i)) {
 				sb.append(i + " ");

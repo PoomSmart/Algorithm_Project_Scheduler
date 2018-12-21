@@ -23,3 +23,5 @@
 hs_err_pid*
 /bin/
 src/Constants.java
+employees.txt
+jobs.txt

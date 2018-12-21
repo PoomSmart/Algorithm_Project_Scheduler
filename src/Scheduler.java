@@ -1,4 +1,10 @@
 import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,6 +19,8 @@ public class Scheduler {
 
 	public static final int lower = Constants.lower;
 	public static final int upper = Constants.upper;
+	
+	private static final boolean clear_old_data = false;
 
 	public static enum JobSortingType {
 		Price, DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
@@ -65,18 +73,64 @@ public class Scheduler {
 		jobSortingType = s.jobSortingType;
 	}
 
-	public void generateJobs() {
-		for (int i = 0; i < n_jobs; ++i) {
-			Job job = new Job(i + 1);
-			job.arrival = Randomizer.rand(lower, upper * 4);
-			job.length = Randomizer.rand(lower, upper) / 2;
-			job.deadline = job.arrival + job.length + Randomizer.rand(lower, upper);
-			job.price = (lower + Randomizer.rand(0, upper / 2)) * 10;
-			ideal_profit += job.price;
-			job.type = Randomizer.rand(1, n_job_types);
-			Debugger.println(job.toString(), true);
-			jobs.add(job);
+	public <T> void saveData(String fileName, List<T> data) {
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(new File(fileName + ".txt")));
+			for (T o : data) {
+				writer.write(o.toString() + "\n");
+			}
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+	}
+
+	public boolean readJobs(String fileName) {
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName + ".txt")));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = line.replaceAll("[A-Za-z:]+", "");
+				line = line.replaceAll("\\s+", " ").substring(1);
+				String[] tokens = line.split(" ");
+				Job job = new Job(Integer.parseInt(tokens[0]));
+				job.type = Integer.parseInt(tokens[1]);
+				job.arrival = Integer.parseInt(tokens[2]);
+				job.length = Integer.parseInt(tokens[3]);
+				job.deadline = Integer.parseInt(tokens[4]);
+				job.price = Integer.parseInt(tokens[5]);
+				ideal_profit += job.price;
+				Debugger.println(job.toString(), true);
+				jobs.add(job);
+			}
+			reader.close();
+			sortJobs();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void generateJobs() {
+		if (clear_old_data || !readJobs("jobs")) {
+			for (int i = 0; i < n_jobs; ++i) {
+				Job job = new Job(i + 1);
+				job.type = Randomizer.rand(1, n_job_types);
+				job.arrival = Randomizer.rand(lower, upper * 4);
+				job.length = Randomizer.rand(lower, upper) / 2;
+				job.deadline = job.arrival + job.length + Randomizer.rand(lower, upper);
+				job.price = (lower + Randomizer.rand(0, upper / 2)) * 10;
+				ideal_profit += job.price;
+				Debugger.println(job.toString(), true);
+				jobs.add(job);
+			}
+			saveData("jobs", jobs);
+			sortJobs();
+		}
+	}
+
+	public void sortJobs() {
 		Debugger.println("Sort jobs by arrival time");
 		Collections.sort(jobs, new Comparator<Job>() {
 			@Override
@@ -86,20 +140,47 @@ public class Scheduler {
 		});
 	}
 
-	public void generateEmployees() {
-		for (int i = 0; i < n_employees; ++i) {
-			Employee e = new Employee(i + 1);
-			for (int j = 1; j <= n_job_types; ++j) {
-				if (Randomizer.rand(0, 4) > 1) {
-					e.addType(j);
+	public boolean readEmployees(String fileName) {
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName + ".txt")));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = line.replaceAll("[A-Za-z:]+", "");
+				line = line.replaceAll("\\s+", " ").substring(1);
+				String[] tokens = line.split(" ");
+				Employee e = new Employee(Integer.parseInt(tokens[0]));
+				for (int i = 1; i < tokens.length; ++i) {
+					e.addType(Integer.parseInt(tokens[i]));
 				}
+				max_job_types = Math.max(max_job_types, e.countJobTypes());
+				Debugger.println(e.toString(), true);
+				es.add(e);
 			}
-			if (e.types == 0) {
-				e.addType(Randomizer.rand(1, n_job_types));
+			reader.close();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public void generateEmployees() {
+		if (clear_old_data || !readEmployees("employees")) {
+			for (int i = 0; i < n_employees; ++i) {
+				Employee e = new Employee(i + 1);
+				for (int j = 1; j <= n_job_types; ++j) {
+					if (Randomizer.rand(0, 4) > 1) {
+						e.addType(j);
+					}
+				}
+				if (e.types == 0) {
+					e.addType(Randomizer.rand(1, n_job_types));
+				}
+				max_job_types = Math.max(max_job_types, e.countJobTypes());
+				Debugger.println(e.toString(), true);
+				es.add(e);
 			}
-			max_job_types = Math.max(max_job_types, e.countJobTypes());
-			Debugger.println(e.toString(), true);
-			es.add(e);
+			saveData("employees", es);
 		}
 	}
 
