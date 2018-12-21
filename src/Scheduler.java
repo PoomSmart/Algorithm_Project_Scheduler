@@ -19,8 +19,9 @@ public class Scheduler {
 
 	public static final int lower = Constants.lower;
 	public static final int upper = Constants.upper;
-	
+
 	private static final boolean clear_old_data = false;
+	private static final boolean vanilla_operate = true;
 
 	public static enum JobSortingType {
 		Price, DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
@@ -425,6 +426,8 @@ public class Scheduler {
 
 		@Override
 		public int operate() {
+			if (vanilla_operate)
+				return super.operate();
 			Debugger.enabled = false;
 			schedule();
 			printJobs();
@@ -451,6 +454,7 @@ public class Scheduler {
 		ArbitraryScheduler as, best_as = null;
 		double average_a_profit = 0;
 		int iterations = 60;
+		Debugger.enabled = false;
 		for (int i = 1; i <= iterations; ++i) {
 			profits.add(s.profit);
 			as = new ArbitraryScheduler(s.jobSortingType);
@@ -468,6 +472,7 @@ public class Scheduler {
 				as = null;
 			a_profits.add(a_profit);
 		}
+		Debugger.enabled = true;
 		if (max_p != 0) {
 			System.out.println("Max Permutation: " + max_p);
 			System.out.println("Profit: " + max_profit + " versus " + s.profit);
