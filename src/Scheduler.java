@@ -77,6 +77,7 @@ public class Scheduler {
 	public <T> void saveData(String fileName, List<T> data) {
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(new File(fileName + ".txt")));
+			writer.write(data.size() + "\n");
 			for (T o : data) {
 				writer.write(o.toString() + "\n");
 			}
@@ -90,21 +91,26 @@ public class Scheduler {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName + ".txt")));
 			String line;
-			while ((line = reader.readLine()) != null) {
-				line = line.replaceAll("[A-Za-z:]+", "");
-				line = line.replaceAll("\\s+", " ").substring(1);
-				String[] tokens = line.split(" ");
-				Job job = new Job(Integer.parseInt(tokens[0]));
-				job.type = Integer.parseInt(tokens[1]);
-				job.arrival = Integer.parseInt(tokens[2]);
-				job.length = Integer.parseInt(tokens[3]);
-				job.deadline = Integer.parseInt(tokens[4]);
-				job.price = Integer.parseInt(tokens[5]);
-				ideal_profit += job.price;
-				Debugger.println(job.toString(), true);
-				jobs.add(job);
+			if (n_jobs == Integer.parseInt(reader.readLine())) {
+				while ((line = reader.readLine()) != null) {
+					line = line.replaceAll("[A-Za-z:]+", "");
+					line = line.replaceAll("\\s+", " ").substring(1);
+					String[] tokens = line.split(" ");
+					Job job = new Job(Integer.parseInt(tokens[0]));
+					job.type = Integer.parseInt(tokens[1]);
+					job.arrival = Integer.parseInt(tokens[2]);
+					job.length = Integer.parseInt(tokens[3]);
+					job.deadline = Integer.parseInt(tokens[4]);
+					job.price = Integer.parseInt(tokens[5]);
+					ideal_profit += job.price;
+					Debugger.println(job.toString(), true);
+					jobs.add(job);
+				}
+				reader.close();
+			} else {
+				reader.close();
+				return false;
 			}
-			reader.close();
 			sortJobs();
 			return true;
 		} catch (IOException e) {
@@ -144,21 +150,26 @@ public class Scheduler {
 	public boolean readEmployees(String fileName) {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(fileName + ".txt")));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				line = line.replaceAll("[A-Za-z:]+", "");
-				line = line.replaceAll("\\s+", " ").substring(1);
-				String[] tokens = line.split(" ");
-				Employee e = new Employee(Integer.parseInt(tokens[0]));
-				for (int i = 1; i < tokens.length; ++i) {
-					e.addType(Integer.parseInt(tokens[i]));
+			if (n_employees == Integer.parseInt(reader.readLine())) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					line = line.replaceAll("[A-Za-z:]+", "");
+					line = line.replaceAll("\\s+", " ").substring(1);
+					String[] tokens = line.split(" ");
+					Employee e = new Employee(Integer.parseInt(tokens[0]));
+					for (int i = 1; i < tokens.length; ++i) {
+						e.addType(Integer.parseInt(tokens[i]));
+					}
+					max_job_types = Math.max(max_job_types, e.countJobTypes());
+					Debugger.println(e.toString(), true);
+					es.add(e);
 				}
-				max_job_types = Math.max(max_job_types, e.countJobTypes());
-				Debugger.println(e.toString(), true);
-				es.add(e);
+				reader.close();
+				return true;
+			} else {
+				reader.close();
+				return false;
 			}
-			reader.close();
-			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -401,6 +412,7 @@ public class Scheduler {
 	static class ArbitraryScheduler extends Scheduler {
 
 		public int p;
+		public boolean vanilla_find_employee;
 
 		public ArbitraryScheduler(JobSortingType type) {
 			super(type);
@@ -408,6 +420,8 @@ public class Scheduler {
 
 		@Override
 		public Employee bestEmployeeFor(Job job) {
+			if (vanilla_find_employee)
+				return super.bestEmployeeFor(job);
 			ArrayList<Employee> employees = new ArrayList<Employee>();
 			for (Employee e : es) {
 				if (e.capable(job.type) && !e.busy) {
@@ -440,60 +454,68 @@ public class Scheduler {
 	}
 
 	public static void main(String[] args) {
-		Scheduler s = new Scheduler(JobSortingType.PriceOverTimeToDeadline);
-		Debugger.enabled = false;
-		s.prepare();
-		Debugger.enabled = true;
-		s.operate();
-		s.calculateEmployeeUtilization();
-		int max_profit = s.profit;
-		int max_p = 0;
-		ArrayList<Integer> profits = new ArrayList<Integer>();
-		ArrayList<Integer> a_profits = new ArrayList<Integer>();
-		ArrayList<Integer> average_profits = new ArrayList<Integer>();
-		ArbitraryScheduler as, best_as = null;
-		double average_a_profit = 0;
+		JobSortingType[] jobSortingTypes = { JobSortingType.Price, JobSortingType.DeadlineThenPrice,
+				JobSortingType.PriceOverTimeToDeadline, JobSortingType.TimeToDeadlineThenPrice };
 		int iterations = 60;
-		Debugger.enabled = false;
-		for (int i = 1; i <= iterations; ++i) {
-			profits.add(s.profit);
-			as = new ArbitraryScheduler(s.jobSortingType);
-			as.p = i;
-			as.jobSortingType = JobSortingType.Price;
-			as.looseCopyFrom(s);
-			Debugger.println("Permutation: " + as.p, true);
-			int a_profit = as.operate() >> 16;
-			average_a_profit += a_profit;
-			if (a_profit > max_profit) {
-				max_profit = a_profit;
-				max_p = as.p;
-				best_as = as;
-			} else
-				as = null;
-			a_profits.add(a_profit);
+		for (JobSortingType jobSortingType : jobSortingTypes) {
+			Scheduler s = new Scheduler(jobSortingType);
+			Debugger.enabled = false;
+			s.prepare();
+			Debugger.enabled = true;
+			s.operate();
+			// s.calculateEmployeeUtilization();
+			ArrayList<Integer> profits = new ArrayList<Integer>();
+			for (int i = 1; i <= iterations; ++i) {
+				profits.add(s.profit);
+			}
+			int max_profit = s.profit;
+			int max_p = 0;
+			ArrayList<Integer> a_profits = new ArrayList<Integer>();
+			ArrayList<Integer> average_profits = new ArrayList<Integer>();
+			ArbitraryScheduler as, best_as = null;
+			double average_a_profit = 0;
+			Debugger.enabled = false;
+			for (int i = 1; i <= iterations; ++i) {
+				as = new ArbitraryScheduler(jobSortingType);
+				as.p = i;
+				as.jobSortingType = jobSortingType;
+				as.vanilla_find_employee = false;
+				as.looseCopyFrom(s);
+				Debugger.println("Permutation: " + as.p, true);
+				int a_profit = as.operate() >> 16;
+				average_a_profit += a_profit;
+				if (a_profit > max_profit) {
+					max_profit = a_profit;
+					max_p = as.p;
+					best_as = as;
+				} else
+					as = null;
+				a_profits.add(a_profit);
+			}
+			Debugger.enabled = true;
+			if (max_p != 0) {
+				System.out.println("Max Permutation: " + max_p);
+				System.out.println("Profit: " + max_profit + " versus " + s.profit);
+				best_as.visualize();
+				best_as.report();
+				// best_as.calculateEmployeeUtilization();
+			}
+			average_a_profit /= iterations;
+			int int_average_a_profit = (int) average_a_profit;
+			for (int i = 1; i <= iterations; ++i) {
+				average_profits.add(int_average_a_profit);
+			}
+			List<List<Integer>> all_profits = new ArrayList<>();
+			all_profits.add(profits);
+			all_profits.add(a_profits);
+			all_profits.add(average_profits);
+			List<Color> all_line_colors = new ArrayList<>();
+			all_line_colors.add(Color.BLUE);
+			all_line_colors.add(Color.PINK);
+			all_line_colors.add(Color.ORANGE);
+			GraphPanel._constructGraphs(jobSortingType + " Permutation versus Reality", all_profits, null,
+					all_line_colors);
 		}
-		Debugger.enabled = true;
-		if (max_p != 0) {
-			System.out.println("Max Permutation: " + max_p);
-			System.out.println("Profit: " + max_profit + " versus " + s.profit);
-			best_as.visualize();
-			best_as.report();
-			best_as.calculateEmployeeUtilization();
-		}
-		average_a_profit /= iterations;
-		int int_average_a_profit = (int) average_a_profit;
-		for (int i = 1; i <= iterations; ++i) {
-			average_profits.add(int_average_a_profit);
-		}
-		List<List<Integer>> all_profits = new ArrayList<>();
-		all_profits.add(profits);
-		all_profits.add(a_profits);
-		all_profits.add(average_profits);
-		List<Color> all_line_colors = new ArrayList<>();
-		all_line_colors.add(Color.BLUE);
-		all_line_colors.add(Color.PINK);
-		all_line_colors.add(Color.ORANGE);
-		GraphPanel._constructGraphs("Permutation versus Reality", all_profits, null, all_line_colors);
 	}
 
 }
