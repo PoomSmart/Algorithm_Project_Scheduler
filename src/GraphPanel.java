@@ -26,7 +26,7 @@ import javax.swing.JPanel;
 public class GraphPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	private int width = 1200;
+	private int width = 800;
 	private int height = 400;
 	private int padding = 25;
 	private int labelPadding = 25;

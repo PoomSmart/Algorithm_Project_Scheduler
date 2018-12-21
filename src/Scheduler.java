@@ -456,7 +456,7 @@ public class Scheduler {
 	public static void main(String[] args) {
 		JobSortingType[] jobSortingTypes = { JobSortingType.Price, JobSortingType.DeadlineThenPrice,
 				JobSortingType.PriceOverTimeToDeadline, JobSortingType.TimeToDeadlineThenPrice };
-		int iterations = 60;
+		int iterations = 40;
 		for (JobSortingType jobSortingType : jobSortingTypes) {
 			Scheduler s = new Scheduler(jobSortingType);
 			Debugger.enabled = false;
@@ -478,7 +478,6 @@ public class Scheduler {
 			for (int i = 1; i <= iterations; ++i) {
 				as = new ArbitraryScheduler(jobSortingType);
 				as.p = i;
-				as.jobSortingType = jobSortingType;
 				as.vanilla_find_employee = false;
 				as.looseCopyFrom(s);
 				Debugger.println("Permutation: " + as.p, true);
@@ -499,7 +498,8 @@ public class Scheduler {
 				best_as.visualize();
 				best_as.report();
 				// best_as.calculateEmployeeUtilization();
-			}
+			} else
+				Debugger.println("Original is the best", true);
 			average_a_profit /= iterations;
 			int int_average_a_profit = (int) average_a_profit;
 			for (int i = 1; i <= iterations; ++i) {
