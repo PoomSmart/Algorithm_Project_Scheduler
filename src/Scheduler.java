@@ -132,6 +132,32 @@ public class Scheduler {
 		return candidates.peek();
 	}
 
+	public int jobCompare(Job j1, Job j2) {
+		switch (jobSortingType) {
+		case DeadlineThenPrice:
+			if (j1.deadline == j2.deadline)
+				return j2.price - j1.price;
+			return j1.deadline - j2.deadline;
+		case TimeToDeadlineThenPrice:
+			int t1 = j1.deadline - current_time;
+			int t2 = j2.deadline - current_time;
+			if (t1 == t2)
+				return j2.price - j1.price;
+			return t1 - t2;
+		case PriceOverTimeToDeadline:
+			int tt1 = j1.deadline - current_time;
+			int tt2 = j2.deadline - current_time;
+			if (tt1 < 0 && tt2 > 0)
+				return 1;
+			if (tt1 > 0 && tt2 < 0)
+				return -1;
+			double r1 = (double) j1.price / (tt1 + 1);
+			double r2 = (double) j2.price / (tt2 + 1);
+			return Double.compare(r2, r1);
+		}
+		return 0;
+	}
+
 	// Estimated complexity: max(n_jobs, max{job_deadline}) * (
 	// n_jobs * log^2(n_jobs) +
 	// n_employees * log(n_employees) +
@@ -143,29 +169,7 @@ public class Scheduler {
 		PriorityQueue<Job> qjobs = new PriorityQueue<Job>(n_jobs, new Comparator<Job>() {
 			@Override
 			public int compare(Job j1, Job j2) {
-				switch (jobSortingType) {
-				case DeadlineThenPrice:
-					if (j1.deadline == j2.deadline)
-						return j2.price - j1.price;
-					return j1.deadline - j2.deadline;
-				case TimeToDeadlineThenPrice:
-					int t1 = j1.deadline - current_time;
-					int t2 = j2.deadline - current_time;
-					if (t1 == t2)
-						return j2.price - j1.price;
-					return t1 - t2;
-				case PriceOverTimeToDeadline:
-					int tt1 = j1.deadline - current_time;
-					int tt2 = j2.deadline - current_time;
-					if (tt1 < 0 && tt2 > 0)
-						return 1;
-					if (tt1 > 0 && tt2 < 0)
-						return -1;
-					double r1 = (double) j1.price / (tt1 + 1);
-					double r2 = (double) j2.price / (tt2 + 1);
-					return Double.compare(r2, r1);
-				}
-				return 0;
+				return jobCompare(j1, j2);
 			}
 
 		});
@@ -288,7 +292,7 @@ public class Scheduler {
 		}
 		GraphPanel.constructGraph("Employee Utilization" + " " + suffix, workUtilization, colors);
 	}
-	
+
 	public void calculateEmployeeUtilization() {
 		calculateEmployeeUtilization("");
 	}
@@ -329,7 +333,7 @@ public class Scheduler {
 			employees = null;
 			return candidate;
 		}
-		
+
 		@Override
 		public void calculateEmployeeUtilization() {
 			calculateEmployeeUtilization(p + "");
@@ -359,14 +363,18 @@ public class Scheduler {
 		int max_p = 0;
 		ArrayList<Integer> profits = new ArrayList<Integer>();
 		ArrayList<Integer> a_profits = new ArrayList<Integer>();
+		ArrayList<Integer> average_profits = new ArrayList<Integer>();
 		ArbitraryScheduler as, best_as = null;
-		for (int i = 1; i <= 50; ++i) {
+		double average_a_profit = 0;
+		int iterations = 60;
+		for (int i = 1; i <= iterations; ++i) {
 			profits.add(s.profit);
 			as = new ArbitraryScheduler(s.jobSortingType);
 			as.p = i;
 			as.looseCopyFrom(s);
 			Debugger.println("Permutation: " + as.p, true);
 			int a_profit = as.operate() >> 16;
+			average_a_profit += a_profit;
 			if (a_profit > max_profit) {
 				max_profit = a_profit;
 				max_p = as.p;
@@ -374,17 +382,26 @@ public class Scheduler {
 			} else
 				as = null;
 			a_profits.add(a_profit);
-
 		}
 		if (max_p != 0) {
 			System.out.println("Max Permutation: " + max_p);
 			System.out.println("Profit: " + max_profit + " versus " + s.profit);
 			best_as.calculateEmployeeUtilization();
 		}
+		average_a_profit /= iterations;
+		int int_average_a_profit = (int)average_a_profit;
+		for (int i = 1; i <= iterations; ++i) {
+			average_profits.add(int_average_a_profit);
+		}
 		List<List<Integer>> all_profits = new ArrayList<>();
 		all_profits.add(profits);
 		all_profits.add(a_profits);
-		GraphPanel._constructGraphs("Permutation versus Reality", all_profits, null);
+		all_profits.add(average_profits);
+		List<Color> all_line_colors = new ArrayList<>();
+		all_line_colors.add(Color.BLUE);
+		all_line_colors.add(Color.PINK);
+		all_line_colors.add(Color.ORANGE);
+		GraphPanel._constructGraphs("Permutation versus Reality", all_profits, null, all_line_colors);
 	}
 
 }
