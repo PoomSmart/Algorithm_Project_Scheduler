@@ -15,7 +15,7 @@ public class Scheduler {
 	public static final int upper = Constants.upper;
 
 	public static enum JobSortingType {
-		DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
+		Price, DeadlineThenPrice, TimeToDeadlineThenPrice, PriceOverTimeToDeadline
 	};
 
 	public JobSortingType jobSortingType;
@@ -134,6 +134,8 @@ public class Scheduler {
 
 	public int jobCompare(Job j1, Job j2) {
 		switch (jobSortingType) {
+		case Price:
+			return Integer.compare(j2.price, j1.price);
 		case DeadlineThenPrice:
 			if (j1.deadline == j2.deadline)
 				return j2.price - j1.price;
@@ -339,11 +341,6 @@ public class Scheduler {
 		public void calculateEmployeeUtilization() {
 			calculateEmployeeUtilization(p + "");
 		}
-		
-		@Override
-		public int jobCompare(Job j1, Job j2) {
-			return Integer.compare(j2.price, j1.price);
-		}
 
 		@Override
 		public int operate() {
@@ -377,6 +374,7 @@ public class Scheduler {
 			profits.add(s.profit);
 			as = new ArbitraryScheduler(s.jobSortingType);
 			as.p = i;
+			as.jobSortingType = JobSortingType.Price;
 			as.looseCopyFrom(s);
 			Debugger.println("Permutation: " + as.p, true);
 			int a_profit = as.operate() >> 16;
@@ -397,7 +395,7 @@ public class Scheduler {
 			best_as.calculateEmployeeUtilization();
 		}
 		average_a_profit /= iterations;
-		int int_average_a_profit = (int)average_a_profit;
+		int int_average_a_profit = (int) average_a_profit;
 		for (int i = 1; i <= iterations; ++i) {
 			average_profits.add(int_average_a_profit);
 		}
