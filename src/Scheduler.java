@@ -262,6 +262,7 @@ public class Scheduler {
 
 	public void visualize() {
 		int i = 0;
+		jobs_done = profit = 0;
 		for (Job job : jobs) {
 			if (job.begin == -1)
 				continue; // this job is not scheduled at all, skip
@@ -338,6 +339,11 @@ public class Scheduler {
 		public void calculateEmployeeUtilization() {
 			calculateEmployeeUtilization(p + "");
 		}
+		
+		@Override
+		public int jobCompare(Job j1, Job j2) {
+			return Integer.compare(j2.price, j1.price);
+		}
 
 		@Override
 		public int operate() {
@@ -386,6 +392,8 @@ public class Scheduler {
 		if (max_p != 0) {
 			System.out.println("Max Permutation: " + max_p);
 			System.out.println("Profit: " + max_profit + " versus " + s.profit);
+			best_as.visualize();
+			best_as.report();
 			best_as.calculateEmployeeUtilization();
 		}
 		average_a_profit /= iterations;
